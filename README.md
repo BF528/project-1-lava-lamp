@@ -1,11 +1,17 @@
-# Project Description
+# Microarray Based Tumor Classification
 
-A brief description of what this repository is for and what it contains
+This is the repository for Project 1 in BF528, Spring 2021.
+This analysis will focus on reproducing the results from the comparison of C3 and C4 tumor subtypes, as demonstrated in the following paper:
 
-# Contributors
+Marisa et al. Gene Expression Classification of Colon Cancer into Molecular Subtypes: Characterization, Validation, and Prognostic Value. PLoS Medicine, May 2013. PMID: 23700391
 
-List contributor names and github user names, or email addresses if desired
+## Contributors
 
-# Repository Contents
+- Daisy Wenyan Han daisyhan@bu.edu
+- Divya Sundaresan divyas3@bu.edu
+- Alec Jacobsen aggjacob@bu.edu
+- Emmanuel Saake esaake@bu.edu
+
+## Repository Contents
 
 Provide a brief description of each script/code file in this repo, what it does, and how to execute it
