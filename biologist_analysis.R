@@ -6,9 +6,6 @@ library(AnnotationDbi)
 library(hgu133plus2.db)
 library(GSEABase)
 
-setwd("/projectnb2/bf528/users/lava_lamp/project_1/daisy_pr1/project-1-lava-lamp")
-set.seed(3423)
-
 ### 6.1 - Map Probe ID's ###
 
 # Read in data
