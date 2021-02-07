@@ -14,4 +14,4 @@ Marisa et al. Gene Expression Classification of Colon Cancer into Molecular Subt
 
 ## Repository Contents
 
-Provide a brief description of each script/code file in this repo, what it does, and how to execute it
+* biologist_analysis.R -- The authors in Marisa et al. sought to understand the biological significance of the different gene expression profiles for each tumor subtype using gene set enrichment analysis. Specifically, KEGG, GO, and cancer hallmark genesets were compared with the top 1000 up- and down-regulated genes of each subtype compared with all the others using Fisher’s Exact test. We will try to reproduce this analysis using KEGG gene sets and the differential expression results generated above.
