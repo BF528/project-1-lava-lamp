@@ -18,10 +18,11 @@ library(affyPLM)
 library(sva)
 library(AnnotationDbi)
 library(hgu133plus2.db)
-library(ggplot2)
+#library(ggplot2)
 #library(ggarrange)
 library(ggpubr)
-
+suppressPackageStartupMessages(library(ggplot2));
+suppressPackageStartupMessages(library(dplyr))
 
 #Microarray analysis "large p, small n" problem
 	# number of features (p, e.g. genes) exceeds the number of samples (n, e.g. patients).
@@ -65,10 +66,10 @@ transposed_data=t(mydata_rowdone);
   #Degree_of_freedom, DF = N - 1
   ##standard deviation
   #variance
-print(ncol(mydata))
+    #print(ncol(mydata))
 
 
-print (names(mydata));
+    #print (names(mydata));
 
 #co-efficient of variation = (standard deviation)/Mean
 
@@ -342,13 +343,13 @@ colored_dendo_of_dendo_obj_avg<-color_branches(dendo_obj_avg, h=3)
 plot(colored_dendo_of_dendo_obj_avg)
 
 #saving cluster data
-suppressPackageStartupMessages(library(dplyr))
+#using suppressPackageStartupMessages(library(dplyr))
 #mutating with the output of cutree () function
 p5_data_cluster<-mutate(p5_data[1:500], cluster=new_trim)
 count(p5_data_cluster)
 
 #Plotting results
-suppressPackageStartupMessages(library(ggplot2))
+#using suppressPackageStartupMessages(library(ggplot2))
 ggplot(p5_data_cluster, aes(x=area, y=perimeter, color=factor(cluster)))+geom_point()
 
 #setting seed for reproducing output
