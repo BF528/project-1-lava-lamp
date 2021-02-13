@@ -54,22 +54,10 @@ transposed_data=t(mydata_rowdone);
 
 #table(mydata)
 #Display head of sample data
-#headers<-row.names(mydata)
 
+#rowheaders<-row.names(mydata_rowdone);
+#colunnames<-names(mydata);
 
-#Chi square function
-#you need the vector and degree of freedom(df)
-#qchisq(vector, df=5)
-#How to computer test statistics and degree of freedom:
-#For each gene  
-  #N: sample size
-  #Degree_of_freedom, DF = N - 1
-  ##standard deviation
-  #variance
-    #print(ncol(mydata))
-
-
-    #print (names(mydata));
 
 #co-efficient of variation = (standard deviation)/Mean
 
@@ -91,10 +79,10 @@ genes_that_pass_log15_test<-function(somedata){
   #lists to store the column index of genes that specify conditions
   #R starts indexing the list from 1
   #Empty list to store the index numbers of genes that pass the log(15) test
-  columns_that_pass_log15<-list();
+  columns_that_pass_log15<-c();
   
   #index to store the column numbers of genes that pass the log2(15) test
-  control_v=0;
+  control_v=1;#R index starts from 1
   
   for (i in 1:number_of_column){
     #reset for each gene
@@ -124,10 +112,6 @@ genes_that_pass_log15_test<-function(somedata){
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#write instruction
-#write.csv(columns_that_pass,"/projectnb/bf527/esaake/columsthatpassed.csv")
-
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 ####FUNCTION TO CALCULATE COEFFICIENT OF VARIATION FOR EACH GENE
 
@@ -234,54 +218,35 @@ compute_QCHISQ<-function(somedata){
 }#End of TCHISQ
 
 
-##########FUNCTION CALLS
+genes_outside_the_critical_region<-function(qchisq_est, T_Statistics){
+  nrows<-nrow(T_Statistics); #Both qchisq_est and T_Staistics have same length
 
-#calling functions genes_that_pass_log15_test
-#returns index of columns that pass the test
-columns_that_pass<-genes_that_pass_log15_test(transposed_data);
-
-#@@@@@
-
-#calling function compute_T to compute T_values for each gene
-Test_Statistics <-compute_T(transposed_data);
-print(ncol(mydata_rowdone))
-#converting T_values to dataframe 
-T_Statistics<-data.frame(Test_Statistics);
-print (T_res)
-
-#@@@@@
-
-#calling function compute_TCHISQ for  each gene
-qschiq_est <-compute_QCHISQ(transposed_data);
-
-#converting tchisq to dataframe 
-#qschiq_df<-data.frame(qschiq_vals);
-print (t_schiq)
-
-
-
-#@@@@@@
-
-#Calling function for coefficient of variation
-#returns matrix of each genes co-efficient of variation
-co_of_var_result<-compute_coefficient_of_variation_each_gene(transposed_data);
-co_of_var_result<-data.frame(co_of_var_result);
-print(co_of_var_result);
-
-print(co_of_var_result[1,1])
-
-#function to return the in
-Indices_of_Genes_that_passed_CoV_threshold<-function(co_of_var_result){
+  indices_genes_outside_critical_region<-c();
+  control=1;# R index starts from 1
+  for(i in 1:nrows){
+      
+      if((T_Statistics[i,1] < qchisq_est[i,1]) || (T_Statistics[i,1]> qchisq_est[i,2])){
+        indices_genes_outside_critical_region[control]<-i;
+        control=control+1;
+      }
+    
+  }
   
+  return(indices_genes_outside_critical_region);
+ } #end of function
+
+
+#function to return the indices after testing the coefficient of var output
+Indices_of_Genes_that_passed_CoV_threshold<-function(co_of_var_result){
+  #initializing variables
   CoV_threshold<-0.186; #threshold for coefficient of variation
   thelength=nrow(co_of_var_result); #upper bound for looping
-  indexer=0; #initializing indexer for my list
+  indexer=1; #initializing indexer for my list; starts from 1
   indices_of_genes_that_passed<-c(); #An empty list
   
     for (i in 1:thelength){
       
       if(co_of_var_result[i,1] > CoV_threshold){
-        
         indices_of_genes_that_passed[indexer]<-i
           indexer=indexer+1;
       }
@@ -290,41 +255,101 @@ Indices_of_Genes_that_passed_CoV_threshold<-function(co_of_var_result){
   return(indices_of_genes_that_passed);
 }#end of function
 
-#calling function to return index of genes that passed CoV test
-Genes_that_passed_CoV<-Indices_of_Genes_that_passed_CoV_threshold(transposed_data);
 
+#@@@@@@@@@@@@@@@@@@@@@@@@@CALLING FUNCTIONS
+
+#%%%%%%%TEST 1
+#calling functions genes_that_pass_log15_test
+#returns index of columns that pass the test
+columns_that_pass_log15<-genes_that_pass_log15_test(transposed_data);
+columns_that_pass_log15<-data.frame(columns_that_pass_log15);
+
+
+#%%%%%%TEST 2
+
+#calling function compute_TCHISQ for  each gene
+qchisq_est <-compute_QCHISQ(transposed_data);
+
+#converting tchisq to dataframe 
+#qschiq_df<-data.frame(qschiq_vals);
+
+#calling function compute_T to compute T_values for each gene
+Test_Statistics <-compute_T(transposed_data);
+
+#converting T_values to dataframe 
+T_Statistics<-data.frame(Test_Statistics);
+
+
+indices_of_genes_outside_CR<-genes_outside_the_critical_region(qchisq_est, T_Statistics);
+indices_of_genes_outside_CR<-data.frame(indices_of_genes_outside_CR);
+
+#%%%%%%TEST 3
+#Calling function for coefficient of variation
+#returns matrix of each genes co-efficient of variation
+co_of_var_result<-compute_coefficient_of_variation_each_gene(transposed_data);
+co_of_var_result<-data.frame(co_of_var_result);
+
+#calling function to return index of genes that passed CoV test
+Genes_that_passed_CoV<-Indices_of_Genes_that_passed_CoV_threshold(co_of_var_result);
 Genes_that_passed_CoV<-as.data.frame(Genes_that_passed_CoV);
 
+#COMBINING PASSERS OF ALL THREE TESTS
+#All genes that passed all test are the intersection of all three list of passers
+  #columns_that_pass_log15
+  #Genes_that_passed_CoV
+  #indices_of_genes_outside_CR
 
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#using intersect we find intersection of all 3 sets of values
+#intersect(a,b) can only take two arguments at a time
+#intersect does not work on dataframe:convert data frame to vector using [[]] or [,1]
+ind_passed_all_threetests<-intersect(intersect(columns_that_pass_log15[[1]],Genes_that_passed_CoV[[1]] ),indices_of_genes_outside_CR[[1]])
 
+#converting the list to dataframe so I can use indexes to truncate data out of original
+ind_passed_all_threetests<-data.frame(ind_passed_all_threetests);
+
+#truncating original data set
+truncated_data<- transposed_data[ , ind_passed_all_threetests[[1]]]
+
+#transposing the result to its original form
+truncated_data_original_form<-t(truncated_data)
+
+#write instruction
+#write.csv(truncated_data_original_form,"/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/gene_expression_pass_all_3tests.csv")
+write.csv(truncated_data_original_form,"/projectnb/bf528/users/lava_lamp/project_1/gene_expression_sec4.csv")
+
+#@@@@@@@@@@
 #PART 5
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@
 
 #Detailing informatin about dataset
-p5_data<-mydata_rowdone;
+p5_data<-data.frame(truncated_data_original_form);
+
+#data meta data
 str(p5_data)
+
+#testing for null values
 any(is.na(p5_data))#To check for missing or null values
+
+#summary of data from part 4
 summary(p5_data)
-#write.csv(summary(p5_data),"/projectnb/bf527/esaake/summary.csv")
+
 
 #Scaling values
 data_scaled<-as.data.frame(scale(p5_data))
-summary(data_scaled)
+#summary(data_scaled)
 
 
 #Finding distance between data points by using Euclidean
 distanced_data<-dist(data_scaled, method='euclidean')
-distanced_data2<-dist(data_scaled, method='euclidean')
 
 #computing hierarchical cluster average
-cluster_average<-hclust(distanced_data2, method='average')
+cluster_average<-hclust(distanced_data, method='average')
 plot(cluster_average)
 
 #Cutting into two cluster of dendograms using cutree()
 new_trim<-cutree(cluster_average, k=2)
 plot(cluster_average)
-rect.hclust(cluster_average, k=2, border=3:9)
+rect.hclust(cluster_average, k=2, border=2:6)
 abline(h=2, col='red');
 
 #Draw the dendogram in different colors
@@ -332,25 +357,29 @@ abline(h=2, col='red');
 suppressPackageStartupMessages(library(dendextend));
 #install.packages('dendextend')
 #library(dendextend)
-#setting seed for reproducubility
+#setting seed for reproducibility
 set.seed(1)
 
 #converting cluster average to dendogram object
 dendo_obj_avg<-as.dendrogram(cluster_average)
 
 #using varying colors to draw dendogram
-colored_dendo_of_dendo_obj_avg<-color_branches(dendo_obj_avg, h=3)
+colored_dendo_of_dendo_obj_avg<-color_branches(dendo_obj_avg, h=2)
 plot(colored_dendo_of_dendo_obj_avg)
 
 #saving cluster data
-#using suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(dplyr))
+
 #mutating with the output of cutree () function
-p5_data_cluster<-mutate(p5_data[1:500], cluster=new_trim)
+#mutate fails when you use on matrix...use dataframe
+p5_data_cluster<-mutate(p5_data, cluster=new_trim)
 count(p5_data_cluster)
 
 #Plotting results
-#using suppressPackageStartupMessages(library(ggplot2))
-ggplot(p5_data_cluster, aes(x=area, y=perimeter, color=factor(cluster)))+geom_point()
+#rowheaders<-row.names(p5_data);
+#columnames<-names(p5_data);
+suppressPackageStartupMessages(library(ggplot2))
+ggplot(p5_data_cluster, aes(x=columnames[1],y=rowheaders, color=factor(cluster)))+geom_point()
 
 #setting seed for reproducing output
 set.seed(110)
