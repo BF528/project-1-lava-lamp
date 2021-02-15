@@ -12,8 +12,10 @@ set.seed(3423)
 ### 6.1 - Map Probe ID's ###
 
 # Read in data
-data <- read.csv("/project/bf528/project_1/data/differential_expression_results.csv")
-matches <- select(hgu133plus2.db, keys = as.character(row.names(data)), columns = ("SYMBOL"))
+# data <- read.csv("/project/bf528/project_1/data/differential_expression_results.csv")
+data <- read.csv("/projectnb2/bf528/users/lava_lamp/project_1/differential_expression_s5.csv", row.names = 1, header= TRUE)
+data <- data %>% arrange(desc(t_statistics))
+matches <- AnnotationDbi::select(hgu133plus2.db, keys = as.character(row.names(data)), columns = ("SYMBOL"))
 # Remove duplicates
 dedup_matches <- matches[!duplicated(matches[1]), ]
 # Combine symbols with differential expression results
@@ -102,18 +104,19 @@ for(geneset in hallmarks){
 # Top 3 Enriched Gene Sets
 top3_kegg <- names(head(sort(pvalues_kegg), 3))
 keggs <- rbind(df_kegg[[top3_kegg[[1]]]], df_kegg[[top3_kegg[[2]]]], df_kegg[[top3_kegg[[3]]]])
+write.csv(keggs, "top_kegg.csv")
 top3_go <- names(head(sort(pvalues_go), 3))
 gos <- rbind(df_go[[top3_go[[1]]]], df_go[[top3_go[[2]]]], df_go[[top3_go[[3]]]])
-top3_go <- names(head(sort(pvalues_go), 3))
-gos <- rbind(df_go[[top3_go[[1]]]], df_go[[top3_go[[2]]]], df_go[[top3_go[[3]]]])
+write.csv(gos, "top_go.csv")
 top3_h <- names(head(sort(pvalues_h), 3))
 hs <- rbind(df_h[[top3_h[[1]]]], df_h[[top3_h[[2]]]], df_h[[top3_h[[3]]]])
+write.csv(hs, "top_h.csv")
 
 # Number of significantly enriched gene sets at p<0.05
 n_enriched_kegg <- sum(pvalues_kegg < 0.05)
 n_enriched_go <- sum(pvalues_go < 0.05)
 n_enriched_h <- sum(pvalues_h < 0.05)
 
-cat("Number of Enriched KEGG gene sets:", n_enriched_kegg)
-cat("Number of Enriched GO gene sets:", n_enriched_go)
-cat("Number of Enriched Hallmark gene sets:", n_enriched_h)
+cat("Number of Enriched KEGG gene sets:", n_enriched_kegg) #186
+cat("Number of Enriched GO gene sets:", n_enriched_go) #10271
+cat("Number of Enriched Hallmark gene sets:", n_enriched_h) #50
