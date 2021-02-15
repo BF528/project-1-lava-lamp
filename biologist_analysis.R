@@ -13,8 +13,10 @@ library(GSEABase)
 data <- read.csv("/projectnb2/bf528/users/lava_lamp/project_1/differential_expression_s5.csv", row.names = 1, header= TRUE)
 data <- data %>% arrange(desc(t_statistics))
 matches <- AnnotationDbi::select(hgu133plus2.db, keys = as.character(row.names(data)), columns = ("SYMBOL"))
+
 # Remove duplicates
 dedup_matches <- matches[!duplicated(matches[1]), ]
+
 # Combine symbols with differential expression results
 data <- cbind(dedup_matches, data)
 
@@ -101,13 +103,13 @@ for(geneset in hallmarks){
 # Top 3 Enriched Gene Sets
 top3_kegg <- names(head(sort(pvalues_kegg), 3))
 keggs <- rbind(df_kegg[[top3_kegg[[1]]]], df_kegg[[top3_kegg[[2]]]], df_kegg[[top3_kegg[[3]]]])
-write.csv(keggs, "top_kegg.csv")
+# write.csv(keggs, "top_kegg.csv")
 top3_go <- names(head(sort(pvalues_go), 3))
 gos <- rbind(df_go[[top3_go[[1]]]], df_go[[top3_go[[2]]]], df_go[[top3_go[[3]]]])
-write.csv(gos, "top_go.csv")
+# write.csv(gos, "top_go.csv")
 top3_h <- names(head(sort(pvalues_h), 3))
 hs <- rbind(df_h[[top3_h[[1]]]], df_h[[top3_h[[2]]]], df_h[[top3_h[[3]]]])
-write.csv(hs, "top_h.csv")
+# write.csv(hs, "top_h.csv")
 
 # Number of significantly enriched gene sets at p<0.05
 n_enriched_kegg <- sum(pvalues_kegg < 0.05)
