@@ -49,28 +49,9 @@ write.csv(top10_down, "top10_downregulated_genes.csv")
 
 ### 6.5 - Fisher Test ###
 
-# Fisher Test Functions - Function to generate p-values for each GMT
-fisher_pvals <- function(gmt){
+# Fisher Test Functions
+fisher <- function(gmt){
   pvalues <- c()
-  df <- list()
-  for(geneset in gmt){
-    setname <- setName(geneset)
-    geneids <- geneIds(geneset)
-    differentially_expressed <- length(data$SYMBOL)
-    in_set <- length(geneids)
-    in_set_differential <- sum(geneids %in% data$SYMBOL)
-    in_set_not_differential <- in_set - in_set_differential
-    not_in_set_differential <- differentially_expressed - in_set_differential
-    not_in_set_not_differential <- 0
-    fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
-    pval <- fishervals$p.value
-    pvalues[setname] <- pval
-  }
-  return(pvalues)
-}
-
-# Fisher Test Functions - Function to generate df of fisher test values for each GMT
-fisher_df <- function(gmt){
   df <- list()
   for(geneset in gmt){
     setname <- setName(geneset)
@@ -86,21 +67,23 @@ fisher_df <- function(gmt){
     est <- fishervals$estimate
     padj <- p.adjust(pval, method="fdr")
     df[[setname]] <- data.frame(geneset = setname, statistic = est, pvalue = pval, p.adj = padj)
+    pvalues[setname] <- pval
   }
-  return(df)
+  rets <- list(pvalues, df)
+  return(rets)
 }
 
 # KEGG Pathways
-pvalues_kegg <- fisher_pvals(kegg)
-df_kegg <- fisher_df(kegg)
+pvalues_kegg <- fisher(kegg)[[1]]
+df_kegg <- fisher(kegg)[[2]]
 
 # GO Pathways
-pvalues_go <- fisher_pvals(go)
-df_go <- fisher_df(go)
+pvalues_go <- fisher(go)[[1]]
+df_go <- fisher(go)[[2]]
 
 # Hallmark Pathways
-pvalues_h <- fisher_pvals(hallmarks)
-df_h <- fisher_df(hallmarks)
+pvalues_h <- fisher(hallmarks)[[1]]
+df_h <- fisher(hallmarks)[[2]]
 
 # Top 3 Enriched Gene Sets
 top3_kegg <- names(head(sort(pvalues_kegg), 3))
