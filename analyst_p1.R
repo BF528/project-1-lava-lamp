@@ -324,7 +324,7 @@ execute_CoVtest<-function(givendata){
     print(paste("Number of samples in cluster 2 =", count(p5_data_cluster[p5_data_cluster$cluster==2,]), sep=" ")) #75
 
     #q3
-    print (paste("The number of differentially expressed genes at p<0.05 =", p_adj_less005_count, sep=" ")) #962
+    print (paste("The number of differentially expressed genes at p<0.05 =", p_adj_less005_count, sep=" ")) #1064
     
     #q4
     #function to return name that have significant p-values
