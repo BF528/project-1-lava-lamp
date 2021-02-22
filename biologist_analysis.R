@@ -1,4 +1,5 @@
 # Load Required Packages
+library(tidyverse)
 library(affy)
 library(affyPLM)
 library(sva)
@@ -20,6 +21,12 @@ dedup_matches <- matches[!duplicated(matches[1]), ]
 # Combine symbols with differential expression results
 data <- cbind(dedup_matches, data)
 
+# Multiple probes may align to the same gene symbol. Remove duplicates, keeping those with most significant adjusted p-value
+data <- data %>%
+  group_by(SYMBOL) %>%
+  filter(adjusted_p == min(adjusted_p)) %>%
+  ungroup(SYMBOL)
+
 ### 6.2 and 6.4 - Gene Sets ###
 
 # Load in Gene Sets
@@ -34,71 +41,66 @@ cat("KEGG Length: ", length(names(kegg))) #186
 
 ## 6.3 - Top Differentially Expressed Genes
 top10_up <- head(data, 10)
+top1000_up <- head(data, 1000)
 top10_down <- tail(data, 10)
+top1000_down <- tail(data, 1000)
 write.csv(top10_up, "top10_upregulated_genes.csv")
 write.csv(top10_down, "top10_downregulated_genes.csv")
 
 ### 6.5 - Fisher Test ###
 
-# KEGG Pathways
-pvalues_kegg <- c()
-df_kegg <- list()
-for(geneset in kegg){
-  setname <- setName(geneset)
-  geneids <- geneIds(geneset)
-  differentially_expressed <- length(data$SYMBOL)
-  in_set <- length(geneids)
-  in_set_differential <- sum(geneids %in% data$SYMBOL)
-  in_set_not_differential <- in_set - in_set_differential
-  not_in_set_differential <- differentially_expressed - in_set_differential
-  not_in_set_not_differential <- 0
-  fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
-  pval <- fishervals$p.value
-  est <- fishervals$estimate
-  padj <- p.adjust(pval, method="fdr")
-  df_kegg[[setname]] <- data.frame(geneset = setname, statistic = est, pvalue = pval, p.adj = padj)
-  pvalues_kegg[setname] <- pval
+# Fisher Test Functions - Function to generate p-values for each GMT
+fisher_pvals <- function(gmt){
+  pvalues <- c()
+  df <- list()
+  for(geneset in gmt){
+    setname <- setName(geneset)
+    geneids <- geneIds(geneset)
+    differentially_expressed <- length(data$SYMBOL)
+    in_set <- length(geneids)
+    in_set_differential <- sum(geneids %in% data$SYMBOL)
+    in_set_not_differential <- in_set - in_set_differential
+    not_in_set_differential <- differentially_expressed - in_set_differential
+    not_in_set_not_differential <- 0
+    fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
+    pval <- fishervals$p.value
+    pvalues[setname] <- pval
+  }
+  return(pvalues)
 }
+
+# Fisher Test Functions - Function to generate df of fisher test values for each GMT
+fisher_df <- function(gmt){
+  df <- list()
+  for(geneset in gmt){
+    setname <- setName(geneset)
+    geneids <- geneIds(geneset)
+    differentially_expressed <- length(data$SYMBOL)
+    in_set <- length(geneids)
+    in_set_differential <- sum(geneids %in% data$SYMBOL)
+    in_set_not_differential <- in_set - in_set_differential
+    not_in_set_differential <- differentially_expressed - in_set_differential
+    not_in_set_not_differential <- 0
+    fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
+    pval <- fishervals$p.value
+    est <- fishervals$estimate
+    padj <- p.adjust(pval, method="fdr")
+    df[[setname]] <- data.frame(geneset = setname, statistic = est, pvalue = pval, p.adj = padj)
+  }
+  return(df)
+}
+
+# KEGG Pathways
+pvalues_kegg <- fisher_pvals(kegg)
+df_kegg <- fisher_df(kegg)
 
 # GO Pathways
-pvalues_go <- c()
-df_go <- list()
-for(geneset in go){
-  setname <- setName(geneset)
-  geneids <- geneIds(geneset)
-  differentially_expressed <- length(data$SYMBOL)
-  in_set <- length(geneids)
-  in_set_differential <- sum(geneids %in% data$SYMBOL)
-  in_set_not_differential <- in_set - in_set_differential
-  not_in_set_differential <- differentially_expressed - in_set_differential
-  not_in_set_not_differential <- 0
-  fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
-  pval <- fishervals$p.value
-  est <- fishervals$estimate
-  padj <- p.adjust(pval, method="fdr")
-  df_go[[setname]] <- data.frame(geneset = setname, statistic = est, pvalue = pval, p.adj = padj)
-  pvalues_go[setname] <- pval
-}
+pvalues_go <- fisher_pvals(go)
+df_go <- fisher_df(go)
 
 # Hallmark Pathways
-pvalues_h <- c()
-df_h <- list()
-for(geneset in hallmarks){
-  setname <- setName(geneset)
-  geneids <- geneIds(geneset)
-  differentially_expressed <- length(data$SYMBOL)
-  in_set <- length(geneids)
-  in_set_differential <- sum(geneids %in% data$SYMBOL)
-  in_set_not_differential <- in_set - in_set_differential
-  not_in_set_differential <- differentially_expressed - in_set_differential
-  not_in_set_not_differential <- 0
-  fishervals <- fisher.test(matrix(c(in_set_differential, in_set_not_differential, not_in_set_differential, not_in_set_not_differential), nrow = 2))
-  pval <- fishervals$p.value
-  est <- fishervals$estimate
-  padj <- p.adjust(pval, method="fdr")
-  df_h[[setname]] <- data.frame(geneset = setname, statistic = est, pvalue = pval, p.adj = padj)
-  pvalues_h[setname] <- pval
-}
+pvalues_h <- fisher_pvals(hallmarks)
+df_h <- fisher_df(hallmarks)
 
 # Top 3 Enriched Gene Sets
 top3_kegg <- names(head(sort(pvalues_kegg), 3))
