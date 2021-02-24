@@ -2,7 +2,7 @@
 
 #Working path
 #---------------
-setwd('/projectnb/bf528/users/lava_lamp/project_1')
+setwd('/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1')
 
 #packages
 #----------
@@ -16,15 +16,15 @@ library(affyPLM)
 library(sva)
 library(AnnotationDbi)
 library(hgu133plus2.db)
-#library(ggplot2)
-#library(ggarrange)
+library(ggplot2)
+library(ggarrange)
 library(ggpubr)
-suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(dplyr))
 library("gplots")
 
 #csv file path
 #-----------------
+respath<-"esaake_pr1/newresultsf/"
 lavalampdatapath<- "/projectnb2/bf528/users/lava_lamp/project_1/expression_data.csv"
 mydata<-read.csv(lavalampdatapath) #reading csv data into mydata variable
 
@@ -109,7 +109,7 @@ execute_chisquarevariancetest<- function(givendata) {
     
     if ((test_statistic_per_gene< qchisq_values_lower)||(test_statistic_per_gene>qchisq_values_upper)){
       test2passers[list_index]<-i;
-      list_index=list_index+1 #incremental of indexing variable
+      list_index=list_index+1 #increment of indexing variable
     }
   }
   return(test2passers)
@@ -174,11 +174,14 @@ execute_CoVtest<-function(givendata){
     #Filtering out gnes that satisfied all three set i.e. the row from the original data
     dimreducedgene_expdata<- gexp_data[ind_passed_all_threetests[[1]], ]
 
+    #data from 4.2 Only test2 passers
+    dimreducedata4_2<- gexp_data[chisquaretestpassers, ]
     
 #Deliverables for part4:
 #----------------------------
     #write instruction
-    write.csv(dimreducedgene_expdata,"/projectnb/bf528/users/lava_lamp/project_1/gene_expression_sec4.csv")
+    #write.csv(dimreducedgene_expdata,"../gene_expression_sec4.csv")
+    
     
     #Number that passed all three tests
     #Q4.2
@@ -196,10 +199,12 @@ execute_CoVtest<-function(givendata){
     
     theheadernames<-c("Num_of_total_genes_from_preprocessed", "Num_of_genes_passed_log_test", "Num_of_genes_outside_critical_region", "num_of_genes_passed_CoV_greater_0.186", "Num_of_genes_passed_all_three_tests")
     summary_result<-data.frame(count=unlist(datatab), row.names = unlist(theheadernames))
-    #write.csv(summary_result, "/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/summarytable_p4.csv")
-  
+    ##write.csv(summary_result, "newresultsf/summarytable_p4.csv")
+
+#==================================  
 #ANALYST: PART 5
 #==================================
+    
     #Setting seed for reproducibility
       set.seed(35)
     #Variable Initialization
@@ -224,7 +229,7 @@ execute_CoVtest<-function(givendata){
  #Metadata #needed to get the cit.coloncancermolecularsubtype
       metadata<-read.csv("/project/bf528/project_1/doc/proj_metadata.csv");
       metadata<-data.frame(metadata);
-    write.csv(metadata, "/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/metacopy.csv")
+      ##write.csv(metadata, "newresultsf/metacopy.csv")
     
     
     #nleaves(cluster_average)
@@ -245,9 +250,9 @@ execute_CoVtest<-function(givendata){
     colored_dendo_of_dendo_obj_avg<-color_branches(dendo_obj_avg, k=2) #using two diff colors to draw the dendogram
     
 #opening an image object for saving
-    jpeg('/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/clusterplot11.jpg', width = 600, height = 600)
+    ##jpeg('newresultsf/clusterplot11.jpg', width = 600, height = 600)
     plot(colored_dendo_of_dendo_obj_avg)
-    dev.off()
+    ##dev.off()
     
     
 #Create a new dataframe storing results
@@ -256,7 +261,7 @@ execute_CoVtest<-function(givendata){
     labelz<-metadata[ ,'geo_accession'];#get sample shortname frm metadata 
     clustertable<-table(p5_data_cluster$cluster,labelz)
     #write to csv
-    #write.csv(clustertable, "/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/clustertable.csv")
+    ##write.csv(clustertable, "newresultsf/clustertable.csv")
     
     
 #Plotting results
@@ -275,10 +280,10 @@ execute_CoVtest<-function(givendata){
     columnames<-names(p5_data);
     
 #saving heatmap to jpeg
-    jpeg('/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/heatmapplotlabel.jpg',  width = 900, height = 600 )
+      ##jpeg('newresultsf/heatmapplotlabel.jpg',  width = 900, height = 600 )
       #heatmap(as.matrix(t(p5_data_cluster[,-1])), ColSideColors = colside_colors, label=columnames)
     heatmap.2(as.matrix(t(p5_data_cluster[,-1])), ColSideColors=colside_colors , main="Gene Expression Heatmap", ylab="Genes",  xlab="Samples")
-    dev.off()
+      ##dev.off()
     
     
  #Welch Test
@@ -295,29 +300,29 @@ execute_CoVtest<-function(givendata){
         #using apply to apply the t.test on data from part 4 #apply(X, M, FUN) #-M1`: the manipulation is on rows #-M2`: the manipulation is on columns
            pvals<- apply(dimreducedgene_expdata, 1, mytest_pval)
           t_statz<-apply(dimreducedgene_expdata, 1, mytest_stat)
-    
+
     
 #p-values less than 0.05
+#---------------------------
       sum(pvals< 0.05)
       hist(pvals);#draw histogram with pvals
     
-#computing p adjusted values
+  #computing p adjusted values
+  #------------------------------
       p_adj<-p.adjust(pvals, method="fdr")
       p_adj_less005_count<-sum( p.adjust(pvals, method="fdr") < 0.05 );# counting those that are less than 0.05
       p_adj_less005_data<-p.adjust(pvals, method="fdr") < 0.05 ;#for getting the list of best rep later
 
     
-#Storing all results in a dataframe
+  #Storing all results in a dataframe
       sec5_4_df<-data.frame(t_statistics=t_statz , p_values=pvals, adjusted_p=p_adj)
       sec5_4_df<- sec5_4_df %>% arrange(desc(sec5_4_df$t_statistics))
-          #sec5_4_df_ext<-data.frame(t_statistics=t_statz , p_values=pvals, adjusted_p=p_adj, less_than_0.05=p_adj_less_005)
-      write.csv(sec5_4_df,"/projectnb/bf528/users/lava_lamp/project_1/differential_expression_s5.csv")
+      #write.csv(sec5_4_df,"../differential_expression_s5.csv")
 
       
     
-    
-    
-    #Answers
+  #Sec 5 Answers
+  #=================
     #computing number of samples in each cluster
     #q1
     print(paste("Number of samples in cluster 1 =", count(p5_data_cluster[p5_data_cluster$cluster==1,]), sep=" ")) #59
@@ -327,22 +332,16 @@ execute_CoVtest<-function(givendata){
     print (paste("The number of differentially expressed genes at p<0.05 =", p_adj_less005_count, sep=" ")) #1064
     
     #q4
-    #function to return name that have significant p-values
-    best_rep_cluster<-function(data){
-      genes_best_rep_clusters<-c();
-      t=1;
-      for (i in 1:length(data)){
-        if (data[i] == TRUE){
-          genes_best_rep_clusters[t]<-names(data[i]);
-          t=t+1;
-        }
-      }
-      return (genes_best_rep_clusters)
-    }
-    best_define_clust <- best_rep_cluster(p_adj_less005_data);
-    cat("genes that best represent clusters are:")
+   
+    p_adj_less005_data<-p_adj_less005_data[p_adj_less005_data==TRUE]
+    p_val_less005<-pvals<0.005;
+    p_val_less005<-p_val_less006[p_val_less005==TRUE];
+    
+    best_define_clust<-p_adj_less005_data;
+    print("genes that best represent clusters are:")
     print(as.data.frame(best_define_clust))
-    #write.csv(best_define_clust, "/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/bestrepclusters.csv")
+    write.csv(best_define_clust, "newresultsf/p_adjust_less005_bestclust.csv")
+    write.csv(p_val_less005, "newresultsf/p_val_less005.csv")
     
     #q5
     cat("This Genes have their p_adjust values less than 0.05. They are below their own threshhold[(0.05/m) * 14]")
@@ -364,5 +363,71 @@ execute_CoVtest<-function(givendata){
     
     
     summary_result_p5<-data.frame(count=data_par, row.names = unlist(parnames))
-    #write.csv(summary_result_p5, "/projectnb/bf528/users/lava_lamp/project_1/esaake_pr1/newresults/summarytable_p5.csv")
+    ##write.csv(summary_result_p5, "newresultsf/summarytable_p5.csv")
     
+  #section 5.6
+    dimreducedata4_2
+    #setting function for p.values 
+    mytest42_pval<- function(wdata) t.test(wdata[new_trim$cluster==1], wdata[new_trim$cluster==2], var.equal=T)$p.value
+    
+    #setting function for t statistics 
+    mytest42_stat<- function(wdata) t.test(wdata[new_trim$cluster==1], wdata[new_trim$cluster==2], var.equal=T)$statistic
+    
+    #using apply to apply the t.test on data from part 4 #apply(X, M, FUN) #-M1`: the manipulation is on rows #-M2`: the manipulation is on columns
+    pvals42<- apply(dimreducedata4_2, 1,  mytest42_pval)
+    t_statz42<-apply(dimreducedata4_2, 1,  mytest42_stat)
+    
+    #p_adjust
+    p_adj42<-p.adjust(pvals42, method="fdr")
+    sec5_6_df<-data.frame(t_statistics=t_statz42 , p_values=pvals42, adjusted_p=p_adj42)
+    sec5_6_df<- sec5_6_df %>% arrange(desc(sec5_6_df$t_statistics))
+    #write.csv(sec5_6_df,"../diffexp_s5_6.csv")
+    
+#gene generation 
+#---------------------
+  library(tidyverse)
+  library(tidyr)
+
+  # get affymetrix probe id names
+  #probe.ids <- row.names(eData)
+  #----------------------------
+    eData<-dimreducedgene_expdata
+    dat<-data.frame(p_adj_less005_data)
+    probe.ids <- rownames( dat)
+    
+  # IDs to Chromosome location, options: columns(hgu133plus2.db)
+    genedata <- tibble(probes=probe.ids,
+                   symbols=AnnotationDbi::mapIds(hgu133plus2.db,keys=probe.ids,
+                                                  column='SYMBOL',keytype='PROBEID',multiVals='first'),
+                   map=AnnotationDbi::mapIds(hgu133plus2.db,keys=probe.ids,
+                                                 column='MAP',keytype='PROBEID',multiVals='first'))
+
+     
+     #Deletion of  NA  
+     genedata <- genedata %>% filter(symbols!='') %>% dplyr::select(-map)
+      
+     # Get Chromosome location annotation data (a little more work)
+     xchroloc <- hgu133plus2CHRLOC
+     
+     # Get the probe identifiers that are mapped to chromosome locations
+     mapped.probes <- mappedkeys(xchroloc)
+     
+     # Convert to a list
+     xxchrloclist <- as.list(xchroloc[mapped.probes])
+     
+     match.probes <- which(names(xxchrloclist) %in% genedata$probes)
+     
+     genedata <- genedata %>% filter(probes %in% names(xxchrloclist[match.probes]))
+     
+     genedata$loc <- lapply(xxchrloclist[match.probes],'[[',1) %>% as.numeric %>% abs
+      
+      # Drop any duplicated values
+      genedata <- genedata[-which(duplicated(genedata[,-1])),]
+      
+      # Lineing up expression data
+      eData <- eData[which(probe.ids %in% genedata$probes),]
+      
+      ##write.csv(genedata,"newresultsf/finalgeneoutput.csv")
+    
+
+      
